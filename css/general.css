@@ -1,0 +1,8 @@
+.image-list-item {
+	display: inline-block;
+}
+
+.image {
+	background-color: yellow;
+	display: block;
+}
