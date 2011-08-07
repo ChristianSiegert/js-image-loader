@@ -1,30 +1,34 @@
 var ImageLoader = new Class({
-	Implements: Options,
+	Implements: [Events, Options],
 
 	options: {
-		className: "image",
-		delay: 2000,
-		foldDistance: 250,
-		parallelDownloads: 1
+		// Number of concurrent downloads
+		concurrentDownloads: 4,
+
+		// Name of the data attribute that stores the image URL
+		dataAttribute: "data-src",
+
+		// Delay between loading two images (in milliseconds)
+		delay: 0,
+
+		// Array of "img" elements
+		elements: []
 	},
 
-	initialize: function() {
-		// Array of "img" elements that contain the images we want to lazy load
-		this.imageElements = $$("." + this.options.className);
+	initialize: function(options) {
+		// Merge provided options with default options
+		this.setOptions(options);
 
 		// Index of the image that is loaded next
 		this.index = 0;
+
+		// Number of loaded images
+		this.loadedImagesCount = 0;
 	},
 
 	run: function() {
-		// Remove "src" attribute to prevent the browser from loading the images
-		for (var i = 0; i < this.imageElements.length; i++) {
-			this.imageElements[i].store("src", this.imageElements[i].getProperty("src"));
-			this.imageElements[i].removeProperty("src");
-		}
-
-		// Load images simultaneously and in order of appearance
-		for (var i = 0; i < this.options.parallelDownloads; i++) {
+		// Load images concurrently and in order
+		for (var i = 0; i < this.options.concurrentDownloads; i++) {
 			this.loadNextImage();
 		}
 	},
@@ -33,30 +37,65 @@ var ImageLoader = new Class({
 		this.loadImage(this.index++);
 	},
 
-	loadImage: function(i) {
-		if (i >= this.imageElements.length) {
+	loadImage: function(index) {
+		if (index >= this.options.elements.length) {
 			return;
 		}
 
 		var image = new Image();
 
-		image.addEvent("load", function(imageElement) {
-			imageElement.setProperty("src", imageElement.retrieve("src"));
-			imageElement.eliminate("src");
-			this.loadNextImage.bind(this).delay(this.options.delay);
-		}.bind(this, this.imageElements[i]));
+		image.addEvent("error", function() {
+			// Relay the image "error" event
+			this.fireEvent("error", this.options.elements[index]);
 
-		image.addEvent("error", function(imageElement) {
-			imageElement.eliminate("src");
+			// If this was the last image to load, fire the "complete" event
+			if (++this.loadedImagesCount === this.options.elements.length) {
+				this.fireEvent("complete");
+				return;
+			}
+
 			this.loadNextImage.bind(this).delay(this.options.delay);
-		}.bind(this, this.imageElements[i]));
+		}.bind(this));
+
+		image.addEvent("load", function(event) {
+			// Relay the image "load" event
+			this.fireEvent("load", [this.options.elements[index], event]);
+
+			// If this was the last image to load, fire the "complete" event
+			if (++this.loadedImagesCount === this.options.elements.length) {
+				this.fireEvent("complete");
+				return;
+			}
+
+			this.loadNextImage.bind(this).delay(this.options.delay);
+		}.bind(this));
 
 		// Start loading the image
-		image.src = this.imageElements[i].retrieve("src");
+		image.src = this.options.elements[index].getProperty(this.options.dataAttribute);
 	}
 });
 
+// Example usage
 window.addEvent("domready", function() {
-	var imageLoader = new ImageLoader();
+	var imageLoader = new ImageLoader({
+		elements: $$(".image")
+	});
+
+	imageLoader.addEvent("complete", function() {
+		console.log("Loading images completed.");
+	});
+
+	imageLoader.addEvent("error", function(element) {
+		console.log("Image failed to load: " + element.getProperty(this.options.dataAttribute));
+		element.getParent().destroy();
+	});
+
+	imageLoader.addEvent("load", function(element) {
+		console.log("Image loaded: " + element.getProperty(this.options.dataAttribute));
+
+		element.setProperty("src", element.getProperty(this.options.dataAttribute));
+		element.removeProperty(this.options.dataAttribute);
+	});
+
 	imageLoader.run();
 });
