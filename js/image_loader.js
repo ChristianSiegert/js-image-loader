@@ -5,13 +5,13 @@ var ImageLoader = new Class({
 		// Number of concurrent downloads
 		concurrentDownloads: 4,
 
-		// Name of the data attribute that stores the image URL
+		// Name of the "img" elements' data attribute that stores the image URL
 		dataAttribute: "data-src",
 
 		// Delay between loading two images (in milliseconds)
 		delay: 0,
 
-		// Array of "img" elements
+		// Array of "img" elements whose content we lazy load
 		elements: []
 	},
 
@@ -26,6 +26,9 @@ var ImageLoader = new Class({
 		this.loadedImagesCount = 0;
 	},
 
+	/**
+	 * Starts the image loader.
+	 */
 	run: function() {
 		// Load images concurrently and in order
 		for (var i = 0; i < this.options.concurrentDownloads; i++) {
@@ -33,10 +36,21 @@ var ImageLoader = new Class({
 		}
 	},
 
+	/**
+	 * Loads the next image that is not loaded or loading yet.
+	 */
 	loadNextImage: function() {
 		this.loadImage(this.index++);
 	},
 
+	/**
+	 * Loads a particular image.
+	 *
+	 * Fires a class-wide "load" event if the image loaded, otherwise an "error"
+	 * event. Also fires a class-wide "complete" event if it was the last image
+	 * to load.
+	 * @param integer index Position in the array "this.options.elements"
+	 */
 	loadImage: function(index) {
 		if (index >= this.options.elements.length) {
 			return;
