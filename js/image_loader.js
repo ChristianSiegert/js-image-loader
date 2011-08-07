@@ -1,10 +1,9 @@
 var ImageLoader = new Class({
 	Implements: [Events, Options],
 
-	options: {
-		// Number of concurrent downloads
-		concurrentDownloads: 4,
+	Binds: ["loadConcurrently"],
 
+	options: {
 		// Name of the "img" elements' data attribute that stores the image URL
 		dataAttribute: "data-src",
 
@@ -12,7 +11,13 @@ var ImageLoader = new Class({
 		delay: 0,
 
 		// Array of "img" elements whose content we lazy load
-		elements: []
+		elements: [],
+
+		// Maximum number of concurrent downloads
+		maxConcurrentDownloads: 4,
+
+		// Only load images that are not further below the fold than this (in px)
+		maxDistance: 250
 	},
 
 	initialize: function(options) {
@@ -24,14 +29,36 @@ var ImageLoader = new Class({
 
 		// Number of loaded images
 		this.loadedImagesCount = 0;
+
+		// Number of running downloads
+		this.concurrentDownloads = 0;
+
+		// Timeout IDs of delayed functions (queued downloads)
+		this.timeoutIds = [];
 	},
 
 	/**
 	 * Starts the image loader.
 	 */
 	run: function() {
-		// Load images concurrently and in order
-		for (var i = 0; i < this.options.concurrentDownloads; i++) {
+		this.loadConcurrently();
+
+		window.addEvent("resize", this.loadConcurrently);
+		window.addEvent("scroll", this.loadConcurrently);
+	},
+
+	/**
+	 * Loads images concurrently and in order.
+	 */
+	loadConcurrently: function() {
+		// Cancel any queued downloads
+		for (var i = 0; i < this.timeoutIds.length; i++) {
+			clearTimeout(this.timeoutIds[i]);
+			this.timeoutIds.splice(i, 1);
+		}
+
+		// Start downloads
+		for (var i = this.concurrentDownloads; i < this.options.maxConcurrentDownloads; i++) {
 			this.loadNextImage();
 		}
 	},
@@ -40,6 +67,16 @@ var ImageLoader = new Class({
 	 * Loads the next image that is not loaded or loading yet.
 	 */
 	loadNextImage: function() {
+		if (this.index >= this.options.elements.length) {
+			return;
+		}
+
+		var fold = window.getSize().y + window.getScroll().y;
+
+		if (this.options.elements[this.index].getPosition().y > fold + this.options.maxDistance) {
+			return;
+		}
+
 		this.loadImage(this.index++);
 	},
 
@@ -52,40 +89,34 @@ var ImageLoader = new Class({
 	 * @param integer index Position in the array "this.options.elements"
 	 */
 	loadImage: function(index) {
-		if (index >= this.options.elements.length) {
-			return;
-		}
-
 		var image = new Image();
 
-		image.addEvent("error", function() {
-			// Relay the image "error" event
-			this.fireEvent("error", this.options.elements[index]);
+		image.addEvent("error", this.imageEventHandler.bind(this, "error", this.options.elements[index]));
+		image.addEvent("load", this.imageEventHandler.bind(this, "load", this.options.elements[index]));
 
-			// If this was the last image to load, fire the "complete" event
-			if (++this.loadedImagesCount === this.options.elements.length) {
-				this.fireEvent("complete");
-				return;
-			}
-
-			this.loadNextImage.bind(this).delay(this.options.delay);
-		}.bind(this));
-
-		image.addEvent("load", function(event) {
-			// Relay the image "load" event
-			this.fireEvent("load", [this.options.elements[index], event]);
-
-			// If this was the last image to load, fire the "complete" event
-			if (++this.loadedImagesCount === this.options.elements.length) {
-				this.fireEvent("complete");
-				return;
-			}
-
-			this.loadNextImage.bind(this).delay(this.options.delay);
-		}.bind(this));
+		this.concurrentDownloads++;
 
 		// Start loading the image
 		image.src = this.options.elements[index].getProperty(this.options.dataAttribute);
+	},
+
+	imageEventHandler: function(eventName, imageElement) {
+		this.concurrentDownloads--;
+
+		// Relay the image event
+		this.fireEvent(eventName, imageElement);
+
+		// If this was the last image to load, fire the "complete" event
+		if (++this.loadedImagesCount === this.options.elements.length) {
+			window.removeEvent("resize", this.loadConcurrently);
+			window.removeEvent("scroll", this.loadConcurrently);
+
+			this.fireEvent("complete");
+			return;
+		}
+
+		var timeoutId = this.loadNextImage.bind(this).delay(this.options.delay);
+		this.timeoutIds.push(timeoutId);
 	}
 });
 
