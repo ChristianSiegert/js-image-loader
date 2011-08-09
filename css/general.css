@@ -1,8 +1,12 @@
+.js-off #image-list {
+	display: none;
+}
+
 .image-list-item {
 	display: inline-block;
 }
 
-.image {
-	background-color: yellow;
-	display: block;
-}
+	.image {
+		background-color: yellow;
+		display: block;
+	}

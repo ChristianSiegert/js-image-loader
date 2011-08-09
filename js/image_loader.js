@@ -10,7 +10,7 @@ var ImageLoader = new Class({
 		// Delay between loading two images (in milliseconds)
 		delay: 0,
 
-		// Array of "img" elements whose content we lazy load
+		// Array of "img" elements whose content we want to lazy load
 		elements: [],
 
 		// Maximum number of concurrent downloads
@@ -122,8 +122,12 @@ var ImageLoader = new Class({
 
 // Example usage
 window.addEvent("domready", function() {
+	$(document.body).removeClass("js-off");
+
 	var imageLoader = new ImageLoader({
-		elements: $$(".image")
+		elements: $$(".image"),
+		maxConcurrentDownloads: 2,
+		maxDistance: 300
 	});
 
 	imageLoader.addEvent("complete", function() {

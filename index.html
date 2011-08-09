@@ -4,77 +4,111 @@
 		<meta charset="UTF-8" />
 		<title>Optimized image loading</title>
 
+		<!-- Libraries our image loader requires. See http://mootools.net/ -->
 		<script defer src="js/mootools-core-1.3.2-full-nocompat-yc.js"></script>
 		<script defer src="js/mootools-more-1.3.2.1.js"></script>
+
+		<!-- Our image loader -->
 		<script defer src="js/image_loader.js"></script>
 
+		<!-- Take a look at the stylesheet. It contains important CSS rules. -->
 		<link rel="stylesheet" href="css/general.css">
 	</head>
 
-	<body>
-		<!-- For anyone with JavaScript enabled -->
+	<!-- Note that we added a class -->
+	<body class="js-off">
+		<!--
+		**For people with JavaScript enabled**
+
+		The "src" attributes of the images below point to a blank image. The
+		actual image is not yet loaded. We store the URL of the image in a data
+		attribute (possible since HTML 5). Once our JavaScript loaded, it goes
+		through the image elements, reads the data attribute that contains the
+		URL and loads the images.
+
+		By default, this list is visible to everyone. Since people with
+		JavaScript disabled only see empty rectangles (remember, no images will
+		be loaded), we hide it from them with this CSS rule:
+			.js-off #image-list {display: none;}
+
+		Sadly, this also hides the list for anyone with JavaScript enabled. That
+		is why we remove the class "js-off" from our <body> element with:
+			$(document.body).removeClass("js-off");
+
+		Voila, the CSS rule no longer applies for people with JavaScript
+		enabled. They can see the list again.
+		-->
 		<ul id="image-list" class="image-list">
-			<li class="image-list-item"><img class="image" height="220" data-src="images/a.jpg" width="330"></li>
-			<li class="image-list-item"><img class="image" height="220" data-src="images/b.jpg" width="293"></li>
-			<li class="image-list-item"><img class="image" height="220" data-src="images/c.jpg" width="330"></li>
-			<li class="image-list-item"><img class="image" height="220" data-src="images/d.jpg" width="293"></li>
-			<li class="image-list-item"><img class="image" height="220" data-src="images/e.jpg" width="330"></li>
-			<li class="image-list-item"><img class="image" height="220" data-src="images/f.jpg" width="257"></li>
-			<li class="image-list-item"><img class="image" height="220" data-src="images/g.jpg" width="330"></li>
-			<li class="image-list-item"><img class="image" height="220" data-src="images/h.jpg" width="294"></li>
-			<li class="image-list-item"><img class="image" height="220" data-src="images/i.jpg" width="336"></li>
-			<li class="image-list-item"><img class="image" height="220" data-src="images/j.jpg" width="330"></li>
+			<li class="image-list-item"><img alt="Lorem ipsum" class="image" height="220" data-src="images/a.jpg" src="images/transparent.gif" width="330"></li>
+			<li class="image-list-item"><img alt="Lorem ipsum" class="image" height="220" data-src="images/b.jpg" src="images/transparent.gif" width="293"></li>
+			<li class="image-list-item"><img alt="Lorem ipsum" class="image" height="220" data-src="images/c.jpg" src="images/transparent.gif" width="330"></li>
+			<li class="image-list-item"><img alt="Lorem ipsum" class="image" height="220" data-src="images/d.jpg" src="images/transparent.gif" width="293"></li>
+			<li class="image-list-item"><img alt="Lorem ipsum" class="image" height="220" data-src="images/e.jpg" src="images/transparent.gif" width="330"></li>
+			<li class="image-list-item"><img alt="Lorem ipsum" class="image" height="220" data-src="images/f.jpg" src="images/transparent.gif" width="257"></li>
+			<li class="image-list-item"><img alt="Lorem ipsum" class="image" height="220" data-src="images/g.jpg" src="images/transparent.gif" width="330"></li>
+			<li class="image-list-item"><img alt="Lorem ipsum" class="image" height="220" data-src="images/h.jpg" src="images/transparent.gif" width="294"></li>
+			<li class="image-list-item"><img alt="Lorem ipsum" class="image" height="220" data-src="images/i.jpg" src="images/transparent.gif" width="336"></li>
+			<li class="image-list-item"><img alt="Lorem ipsum" class="image" height="220" data-src="images/j.jpg" src="images/transparent.gif" width="330"></li>
 
-			<li class="image-list-item"><img class="image" height="220" data-src="images/k.jpg" width="171"></li>
-			<li class="image-list-item"><img class="image" height="220" data-src="images/l.jpg" width="147"></li>
-			<li class="image-list-item"><img class="image" height="220" data-src="images/m.jpg" width="146"></li>
-			<li class="image-list-item"><img class="image" height="220" data-src="images/n.jpg" width="415"></li>
-			<li class="image-list-item"><img class="image" height="220" data-src="images/o.jpg" width="329"></li>
-			<li class="image-list-item"><img class="image" height="220" data-src="images/p.jpg" width="147"></li>
-			<li class="image-list-item"><img class="image" height="220" data-src="images/q.jpg" width="352"></li>
-			<li class="image-list-item"><img class="image" height="220" data-src="images/r.jpg" width="368"></li>
-			<li class="image-list-item"><img class="image" height="220" data-src="images/s.jpg" width="352"></li>
-			<li class="image-list-item"><img class="image" height="220" data-src="images/t.jpg" width="354"></li>
+			<li class="image-list-item"><img alt="Lorem ipsum" class="image" height="220" data-src="images/k.jpg" src="images/transparent.gif" width="171"></li>
+			<li class="image-list-item"><img alt="Lorem ipsum" class="image" height="220" data-src="images/l.jpg" src="images/transparent.gif" width="147"></li>
+			<li class="image-list-item"><img alt="Lorem ipsum" class="image" height="220" data-src="images/m.jpg" src="images/transparent.gif" width="146"></li>
+			<li class="image-list-item"><img alt="Lorem ipsum" class="image" height="220" data-src="images/n.jpg" src="images/transparent.gif" width="415"></li>
+			<li class="image-list-item"><img alt="Lorem ipsum" class="image" height="220" data-src="images/o.jpg" src="images/transparent.gif" width="329"></li>
+			<li class="image-list-item"><img alt="Lorem ipsum" class="image" height="220" data-src="images/p.jpg" src="images/transparent.gif" width="147"></li>
+			<li class="image-list-item"><img alt="Lorem ipsum" class="image" height="220" data-src="images/q.jpg" src="images/transparent.gif" width="352"></li>
+			<li class="image-list-item"><img alt="Lorem ipsum" class="image" height="220" data-src="images/r.jpg" src="images/transparent.gif" width="368"></li>
+			<li class="image-list-item"><img alt="Lorem ipsum" class="image" height="220" data-src="images/s.jpg" src="images/transparent.gif" width="352"></li>
+			<li class="image-list-item"><img alt="Lorem ipsum" class="image" height="220" data-src="images/t.jpg" src="images/transparent.gif" width="354"></li>
 
-			<li class="image-list-item"><img class="image" height="220" data-src="images/u.jpg" width="391"></li>
-			<li class="image-list-item"><img class="image" height="220" data-src="images/v.jpg" width="147"></li>
-			<li class="image-list-item"><img class="image" height="220" data-src="images/w.jpg" width="391"></li>
-			<li class="image-list-item"><img class="image" height="220" data-src="images/x.jpg" width="354"></li>
-			<li class="image-list-item"><img class="image" height="220" data-src="images/y.jpg" width="331"></li>
-			<li class="image-list-item"><img class="image" height="220" data-src="images/z.jpg" width="748"></li>
+			<li class="image-list-item"><img alt="Lorem ipsum" class="image" height="220" data-src="images/u.jpg" src="images/transparent.gif" width="391"></li>
+			<li class="image-list-item"><img alt="Lorem ipsum" class="image" height="220" data-src="images/v.jpg" src="images/transparent.gif" width="147"></li>
+			<li class="image-list-item"><img alt="Lorem ipsum" class="image" height="220" data-src="images/w.jpg" src="images/transparent.gif" width="391"></li>
+			<li class="image-list-item"><img alt="Lorem ipsum" class="image" height="220" data-src="images/x.jpg" src="images/transparent.gif" width="354"></li>
+			<li class="image-list-item"><img alt="Lorem ipsum" class="image" height="220" data-src="images/y.jpg" src="images/transparent.gif" width="331"></li>
+			<li class="image-list-item"><img alt="Lorem ipsum" class="image" height="220" data-src="images/z.jpg" src="images/transparent.gif" width="748"></li>
 		</ul>
 
-		<!-- Fallback for anyone with JavaScript disabled -->
+		<!--
+		**For people with JavaScript disabled**
+
+		We want anyone with JavaScript disabled to see our images, too. That is
+		done the old-school way: Image elements with the "src" attribute
+		pointing to the image.
+
+		We also wrapped <noscript> tags around the list. This way, browsers with
+		JavaScript enabled ignore it.
+		-->
 		<noscript>
 			<ul class="image-list">
-				<li class="image-list-item"><img class="image" height="220" src="images/a.jpg" width="330"></li>
-				<li class="image-list-item"><img class="image" height="220" src="images/b.jpg" width="293"></li>
-				<li class="image-list-item"><img class="image" height="220" src="images/c.jpg" width="330"></li>
-				<li class="image-list-item"><img class="image" height="220" src="images/d.jpg" width="293"></li>
-				<li class="image-list-item"><img class="image" height="220" src="images/e.jpg" width="330"></li>
-				<li class="image-list-item"><img class="image" height="220" src="images/f.jpg" width="257"></li>
-				<li class="image-list-item"><img class="image" height="220" src="images/g.jpg" width="330"></li>
-				<li class="image-list-item"><img class="image" height="220" src="images/h.jpg" width="294"></li>
-				<li class="image-list-item"><img class="image" height="220" src="images/i.jpg" width="336"></li>
-				<li class="image-list-item"><img class="image" height="220" src="images/j.jpg" width="330"></li>
+				<li class="image-list-item"><img alt="Lorem ipsum" class="image" height="220" src="images/a.jpg" width="330"></li>
+				<li class="image-list-item"><img alt="Lorem ipsum" class="image" height="220" src="images/b.jpg" width="293"></li>
+				<li class="image-list-item"><img alt="Lorem ipsum" class="image" height="220" src="images/c.jpg" width="330"></li>
+				<li class="image-list-item"><img alt="Lorem ipsum" class="image" height="220" src="images/d.jpg" width="293"></li>
+				<li class="image-list-item"><img alt="Lorem ipsum" class="image" height="220" src="images/e.jpg" width="330"></li>
+				<li class="image-list-item"><img alt="Lorem ipsum" class="image" height="220" src="images/f.jpg" width="257"></li>
+				<li class="image-list-item"><img alt="Lorem ipsum" class="image" height="220" src="images/g.jpg" width="330"></li>
+				<li class="image-list-item"><img alt="Lorem ipsum" class="image" height="220" src="images/h.jpg" width="294"></li>
+				<li class="image-list-item"><img alt="Lorem ipsum" class="image" height="220" src="images/i.jpg" width="336"></li>
+				<li class="image-list-item"><img alt="Lorem ipsum" class="image" height="220" src="images/j.jpg" width="330"></li>
 
-				<li class="image-list-item"><img class="image" height="220" src="images/k.jpg" width="171"></li>
-				<li class="image-list-item"><img class="image" height="220" src="images/l.jpg" width="147"></li>
-				<li class="image-list-item"><img class="image" height="220" src="images/m.jpg" width="146"></li>
-				<li class="image-list-item"><img class="image" height="220" src="images/n.jpg" width="415"></li>
-				<li class="image-list-item"><img class="image" height="220" src="images/o.jpg" width="329"></li>
-				<li class="image-list-item"><img class="image" height="220" src="images/p.jpg" width="147"></li>
-				<li class="image-list-item"><img class="image" height="220" src="images/q.jpg" width="352"></li>
-				<li class="image-list-item"><img class="image" height="220" src="images/r.jpg" width="368"></li>
-				<li class="image-list-item"><img class="image" height="220" src="images/s.jpg" width="352"></li>
-				<li class="image-list-item"><img class="image" height="220" src="images/t.jpg" width="354"></li>
+				<li class="image-list-item"><img alt="Lorem ipsum" class="image" height="220" src="images/k.jpg" width="171"></li>
+				<li class="image-list-item"><img alt="Lorem ipsum" class="image" height="220" src="images/l.jpg" width="147"></li>
+				<li class="image-list-item"><img alt="Lorem ipsum" class="image" height="220" src="images/m.jpg" width="146"></li>
+				<li class="image-list-item"><img alt="Lorem ipsum" class="image" height="220" src="images/n.jpg" width="415"></li>
+				<li class="image-list-item"><img alt="Lorem ipsum" class="image" height="220" src="images/o.jpg" width="329"></li>
+				<li class="image-list-item"><img alt="Lorem ipsum" class="image" height="220" src="images/p.jpg" width="147"></li>
+				<li class="image-list-item"><img alt="Lorem ipsum" class="image" height="220" src="images/q.jpg" width="352"></li>
+				<li class="image-list-item"><img alt="Lorem ipsum" class="image" height="220" src="images/r.jpg" width="368"></li>
+				<li class="image-list-item"><img alt="Lorem ipsum" class="image" height="220" src="images/s.jpg" width="352"></li>
+				<li class="image-list-item"><img alt="Lorem ipsum" class="image" height="220" src="images/t.jpg" width="354"></li>
 
-				<li class="image-list-item"><img class="image" height="220" src="images/u.jpg" width="391"></li>
-				<li class="image-list-item"><img class="image" height="220" src="images/v.jpg" width="147"></li>
-				<li class="image-list-item"><img class="image" height="220" src="images/w.jpg" width="391"></li>
-				<li class="image-list-item"><img class="image" height="220" src="images/x.jpg" width="354"></li>
-				<li class="image-list-item"><img class="image" height="220" src="images/y.jpg" width="331"></li>
-				<li class="image-list-item"><img class="image" height="220" src="images/z.jpg" width="748"></li>
+				<li class="image-list-item"><img alt="Lorem ipsum" class="image" height="220" src="images/u.jpg" width="391"></li>
+				<li class="image-list-item"><img alt="Lorem ipsum" class="image" height="220" src="images/v.jpg" width="147"></li>
+				<li class="image-list-item"><img alt="Lorem ipsum" class="image" height="220" src="images/w.jpg" width="391"></li>
+				<li class="image-list-item"><img alt="Lorem ipsum" class="image" height="220" src="images/x.jpg" width="354"></li>
+				<li class="image-list-item"><img alt="Lorem ipsum" class="image" height="220" src="images/y.jpg" width="331"></li>
+				<li class="image-list-item"><img alt="Lorem ipsum" class="image" height="220" src="images/z.jpg" width="748"></li>
 			</ul>
 		</noscript>
 	</body>
