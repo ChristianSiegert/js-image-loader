@@ -1,3 +1,4 @@
+// ImageLoader class. Scroll to bottom for example usage.
 var ImageLoader = new Class({
 	Implements: [Events, Options],
 
@@ -17,12 +18,18 @@ var ImageLoader = new Class({
 		maxConcurrentDownloads: 4,
 
 		// Only load images that are not further below the fold than this (in px)
-		maxDistance: 250
+		maxDistance: 250,
+
+		// CSS class that is used to hide empty image elements from people with JS off
+		noJsClass: "no-js"
 	},
 
 	initialize: function(options) {
 		// Merge provided options with default options
 		this.setOptions(options);
+
+		// Make hidden image elements visible for people with JS on
+		$(document.body).removeClass(this.options.noJsClass);
 
 		// Index of the image that is loaded next
 		this.index = 0;
@@ -123,9 +130,6 @@ var ImageLoader = new Class({
 
 // Example usage
 window.addEvent("domready", function() {
-	// Remove class "no-js" so our images become visible for people with JS on.
-	$(document.body).removeClass("no-js");
-
 	// Instantiate image loader. See ImageLoader.options for available options.
 	var imageLoader = new ImageLoader({
 		elements: $$(".image"),
