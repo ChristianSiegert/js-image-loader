@@ -115,6 +115,7 @@ var ImageLoader = new Class({
 			return;
 		}
 
+		// Queue next image
 		var timeoutId = this.loadNextImage.bind(this).delay(this.options.delay);
 		this.timeoutIds.push(timeoutId);
 	}
@@ -122,8 +123,10 @@ var ImageLoader = new Class({
 
 // Example usage
 window.addEvent("domready", function() {
-	$(document.body).removeClass("js-off");
+	// Remove class "no-js" so our images become visible for people with JS on.
+	$(document.body).removeClass("no-js");
 
+	// Instantiate image loader. See ImageLoader.options for available options.
 	var imageLoader = new ImageLoader({
 		elements: $$(".image"),
 		maxConcurrentDownloads: 2,

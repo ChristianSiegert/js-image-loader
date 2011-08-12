@@ -16,26 +16,26 @@
 	</head>
 
 	<!-- Note that we added a class -->
-	<body class="js-off">
+	<body class="no-js">
 		<!--
-		**For people with JavaScript enabled**
+		**List of images for people with JavaScript enabled**
 
 		The "src" attributes of the images below point to a blank image. The
 		actual image is not yet loaded. We store the URL of the image in a data
 		attribute (possible since HTML 5). Once our JavaScript loaded, it goes
 		through the image elements, reads the data attribute that contains the
-		URL and loads the images.
+		URL and loads the images in a controlled way.
 
 		By default, this list is visible to everyone. Since people with
-		JavaScript disabled only see empty rectangles (remember, no images will
-		be loaded), we hide it from them with this CSS rule:
-			.js-off #image-list {display: none;}
+		JavaScript disabled only see empty rectangles (remember, no images are
+		loaded without JavaScript), we hide it from them with this CSS rule:
+			.no-js #image-list {display: none;}
 
 		Sadly, this also hides the list for anyone with JavaScript enabled. That
-		is why we remove the class "js-off" from our <body> element with:
-			$(document.body).removeClass("js-off");
+		is why we remove the class "no-js" from our <body> element with:
+			$(document.body).removeClass("no-js");
 
-		Voila, the CSS rule no longer applies for people with JavaScript
+		Voila, the CSS rule no longer applies to people with JavaScript
 		enabled. They can see the list again.
 		-->
 		<ul id="image-list" class="image-list">
@@ -70,7 +70,7 @@
 		</ul>
 
 		<!--
-		**For people with JavaScript disabled**
+		**List of images for people with JavaScript disabled**
 
 		We want anyone with JavaScript disabled to see our images, too. That is
 		done the old-school way: Image elements with the "src" attribute
