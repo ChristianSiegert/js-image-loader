@@ -4,7 +4,10 @@ var ImageLoader = new Class({
 
 	Binds: ["loadConcurrently"],
 
+	// Default options
 	options: {
+		container: window,
+
 		// Name of the "img" elements' data attribute that stores the image URL
 		dataAttribute: "data-src",
 
@@ -17,10 +20,12 @@ var ImageLoader = new Class({
 		// Maximum number of concurrent downloads
 		maxConcurrentDownloads: 4,
 
-		// Only load images that are not further below the fold than this (in px)
+		// Maximum distance that images can be away from the visible part of the
+		// container and still be loaded
 		maxDistance: 250,
 
-		// CSS class that is used to hide empty image elements from people with JS off
+		// CSS class that is used to hide empty image elements from people with
+		// JavaScript disabled
 		noJsClass: "no-js"
 	},
 
@@ -28,11 +33,8 @@ var ImageLoader = new Class({
 		// Merge provided options with default options
 		this.setOptions(options);
 
-		// Make hidden image elements visible for people with JS on
+		// Make hidden image elements visible for people with JavaScript enabled
 		$(document.body).removeClass(this.options.noJsClass);
-
-		// Index of the image that is loaded next
-		this.index = 0;
 
 		// Number of loaded images
 		this.loadedImagesCount = 0;
@@ -42,6 +44,10 @@ var ImageLoader = new Class({
 
 		// Timeout IDs of delayed functions (queued downloads)
 		this.timeoutIds = [];
+
+		this.unloadedElements = this.options.elements.slice();
+		this.loadedElements = [];
+		this.elementsToLoad = [];
 	},
 
 	/**
@@ -61,7 +67,25 @@ var ImageLoader = new Class({
 		// Cancel any queued downloads
 		for (var i = 0; i < this.timeoutIds.length; i++) {
 			clearTimeout(this.timeoutIds[i]);
-			this.timeoutIds.splice(i, 1);
+		}
+		this.timeoutIds = [];
+
+		// Unload any loaded elements if necessary
+		for (var i = 0; i < this.loadedElements.length; i++) {
+			if (!this.elementIsVisible(this.loadedElements[i])) {
+				this.loadedElements[i].setProperty("src", this.loadedElements[i].retrieve("originalSrc"));
+				this.unloadedElements.push(this.loadedElements.splice(i, 1)[0]);
+				i--;
+			}
+		}
+
+		// Prepare to load unloaded elements
+		this.elementsToLoad = [];
+
+		for (var i = 0; i < this.unloadedElements.length; i++) {
+			if (this.elementIsVisible(this.unloadedElements[i])) {
+				this.elementsToLoad.push(this.unloadedElements[i]);
+			}
 		}
 
 		// Start downloads
@@ -71,20 +95,14 @@ var ImageLoader = new Class({
 	},
 
 	/**
-	 * Loads the next image that is not loaded or loading yet.
+	 * Loads the next image.
 	 */
 	loadNextImage: function() {
-		if (this.index >= this.options.elements.length) {
+		if (this.elementsToLoad.length === 0) {
 			return;
 		}
 
-		var fold = window.getSize().y + window.getScroll().y;
-
-		if (this.options.elements[this.index].getPosition().y > fold + this.options.maxDistance) {
-			return;
-		}
-
-		this.loadImage(this.index++);
+		this.loadImage(this.elementsToLoad.splice(0, 1)[0]);
 	},
 
 	/**
@@ -95,16 +113,19 @@ var ImageLoader = new Class({
 	 * to load.
 	 * @param integer index Position in the array "this.options.elements"
 	 */
-	loadImage: function(index) {
+	loadImage: function(imageElement) {
 		var image = new Image();
 
-		image.addEvent("error", this.imageEventHandler.bind(this, "error", this.options.elements[index]));
-		image.addEvent("load", this.imageEventHandler.bind(this, "load", this.options.elements[index]));
+		image.addEvent("error", this.imageEventHandler.bind(this, "error", imageElement));
+		image.addEvent("load", this.imageEventHandler.bind(this, "load", imageElement));
 
 		this.concurrentDownloads++;
+		imageElement.store("originalSrc", imageElement.getProperty("src"));
+		this.unloadedElements.splice(this.unloadedElements.indexOf(imageElement), 1);
+		this.loadedElements.push(imageElement);
 
 		// Start loading the image
-		image.src = this.options.elements[index].getProperty(this.options.dataAttribute);
+		image.src = imageElement.getProperty(this.options.dataAttribute);
 	},
 
 	imageEventHandler: function(eventName, imageElement) {
@@ -115,9 +136,6 @@ var ImageLoader = new Class({
 
 		// If this was the last image to load, fire the "complete" event
 		if (++this.loadedImagesCount === this.options.elements.length) {
-			window.removeEvent("resize", this.loadConcurrently);
-			window.removeEvent("scroll", this.loadConcurrently);
-
 			this.fireEvent("complete");
 			return;
 		}
@@ -125,6 +143,17 @@ var ImageLoader = new Class({
 		// Queue next image
 		var timeoutId = this.loadNextImage.bind(this).delay(this.options.delay);
 		this.timeoutIds.push(timeoutId);
+	},
+
+	elementIsVisible: function(imageElement) {
+		var imageElementCoordinates = imageElement.getCoordinates();
+		var containerSize = this.options.container.getSize();
+		var containerScroll = this.options.container.getScroll();
+
+		return imageElementCoordinates.bottom >= containerScroll.y - this.options.maxDistance
+			&& imageElementCoordinates.top <= containerScroll.y + containerSize.y + this.options.maxDistance
+			&& imageElementCoordinates.right >= containerScroll.x - this.options.maxDistance
+			&& imageElementCoordinates.left <= containerScroll.x + containerSize.x + this.options.maxDistance;
 	}
 });
 
@@ -148,9 +177,7 @@ window.addEvent("domready", function() {
 
 	imageLoader.addEvent("load", function(element) {
 		console.log("Image loaded: " + element.getProperty(this.options.dataAttribute));
-
 		element.setProperty("src", element.getProperty(this.options.dataAttribute));
-		element.removeProperty(this.options.dataAttribute);
 	});
 
 	imageLoader.run();
