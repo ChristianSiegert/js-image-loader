@@ -2,8 +2,6 @@
 var ImageLoader = new Class({
 	Implements: [Events, Options],
 
-	Binds: ["loadConcurrently"],
-
 	// Default options
 	options: {
 		container: window,
@@ -48,6 +46,10 @@ var ImageLoader = new Class({
 		this.unloadedElements = this.options.elements.slice();
 		this.loadedElements = [];
 		this.elementsToLoad = [];
+
+		this.fetchCoordinates();
+		this.fetchOriginalSrc();
+		this.fetchSizes();
 	},
 
 	/**
@@ -56,8 +58,38 @@ var ImageLoader = new Class({
 	run: function() {
 		this.loadConcurrently();
 
-		window.addEvent("resize", this.loadConcurrently);
-		window.addEvent("scroll", this.loadConcurrently);
+		window.addEvent("resize", function() {
+			this.fetchCoordinates();
+			this.fetchSizes();
+			this.loadConcurrently();
+		}.bind(this));
+
+		window.addEvent("scroll", function() {
+			this.fetchSizes();
+			this.loadConcurrently();
+		}.bind(this));
+	},
+
+	fetchCoordinates: function() {
+		for (var i = 0; i < this.options.elements.length; i++) {
+			this.options.elements[i].store("coordinates", this.options.elements[i].getCoordinates());
+		}
+	},
+
+	fetchOriginalSrc: function() {
+		for (var i = 0; i < this.options.elements.length; i++) {
+			this.options.elements[i].store("originalSrc", this.options.elements[i].getProperty("src"));
+		}
+	},
+
+	fetchSizes: function() {
+		this.containerScroll = this.options.container.getScroll();
+		this.containerSize = this.options.container.getSize();
+
+		this.containerBottom = this.containerScroll.y + this.containerSize.y + this.options.maxDistance;
+		this.containerLeft = this.containerScroll.x - this.options.maxDistance
+		this.containerRight = this.containerScroll.x + this.containerSize.x + this.options.maxDistance;
+		this.containerTop = this.containerScroll.y - this.options.maxDistance;
 	},
 
 	/**
@@ -120,7 +152,6 @@ var ImageLoader = new Class({
 		image.addEvent("load", this.imageEventHandler.bind(this, "load", imageElement));
 
 		this.concurrentDownloads++;
-		imageElement.store("originalSrc", imageElement.getProperty("src"));
 		this.unloadedElements.splice(this.unloadedElements.indexOf(imageElement), 1);
 		this.loadedElements.push(imageElement);
 
@@ -146,14 +177,12 @@ var ImageLoader = new Class({
 	},
 
 	elementIsVisible: function(imageElement) {
-		var imageElementCoordinates = imageElement.getCoordinates();
-		var containerSize = this.options.container.getSize();
-		var containerScroll = this.options.container.getScroll();
+		var imageElementCoordinates = imageElement.retrieve("coordinates");
 
-		return imageElementCoordinates.bottom >= containerScroll.y - this.options.maxDistance
-			&& imageElementCoordinates.top <= containerScroll.y + containerSize.y + this.options.maxDistance
-			&& imageElementCoordinates.right >= containerScroll.x - this.options.maxDistance
-			&& imageElementCoordinates.left <= containerScroll.x + containerSize.x + this.options.maxDistance;
+		return imageElementCoordinates.bottom >= this.containerTop
+			&& imageElementCoordinates.top <= this.containerBottom
+			&& imageElementCoordinates.right >= this.containerLeft
+			&& imageElementCoordinates.left <= this.containerRight;
 	}
 });
 
@@ -163,7 +192,7 @@ window.addEvent("domready", function() {
 	var imageLoader = new ImageLoader({
 		elements: $$(".image"),
 		maxConcurrentDownloads: 2,
-		maxDistance: 300
+		maxDistance: 400
 	});
 
 	imageLoader.addEvent("complete", function() {
