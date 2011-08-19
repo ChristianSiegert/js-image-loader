@@ -47,30 +47,43 @@ var ImageLoader = new Class({
 		this.loadedElements = [];
 		this.elementsToLoad = [];
 
-		this.fetchCoordinates();
-		this.fetchOriginalSrc();
-		this.fetchSizes();
+		this.containerCoordinates = {};
 	},
 
 	/**
 	 * Starts the image loader.
 	 */
 	run: function() {
-		this.loadConcurrently();
+		this.fetchContainerCoordinates();
+		this.fetchElementCoordinates();
+		this.fetchOriginalSrc();
+		this.manageImages();
 
 		window.addEvent("resize", function() {
-			this.fetchCoordinates();
-			this.fetchSizes();
-			this.loadConcurrently();
+			this.fetchContainerCoordinates();
+			this.fetchElementCoordinates();
+			this.manageImages();
 		}.bind(this));
 
 		window.addEvent("scroll", function() {
-			this.fetchSizes();
-			this.loadConcurrently();
+			this.fetchContainerCoordinates();
+			this.manageImages();
 		}.bind(this));
 	},
 
-	fetchCoordinates: function() {
+	fetchContainerCoordinates: function() {
+		var containerScroll = this.options.container.getScroll();
+		var containerSize = this.options.container.getSize();
+
+		this.containerCoordinates = {
+			bottom: containerScroll.y + containerSize.y + this.options.maxDistance,
+			left: containerScroll.x - this.options.maxDistance,
+			right: containerScroll.x + containerSize.x + this.options.maxDistance,
+			top: containerScroll.y - this.options.maxDistance
+		}
+	},
+
+	fetchElementCoordinates: function() {
 		for (var i = 0; i < this.options.elements.length; i++) {
 			this.options.elements[i].store("coordinates", this.options.elements[i].getCoordinates());
 		}
@@ -82,45 +95,76 @@ var ImageLoader = new Class({
 		}
 	},
 
-	fetchSizes: function() {
-		this.containerScroll = this.options.container.getScroll();
-		this.containerSize = this.options.container.getSize();
+	manageImages: function() {
+		var startTime = Date.now();
 
-		this.containerBottom = this.containerScroll.y + this.containerSize.y + this.options.maxDistance;
-		this.containerLeft = this.containerScroll.x - this.options.maxDistance
-		this.containerRight = this.containerScroll.x + this.containerSize.x + this.options.maxDistance;
-		this.containerTop = this.containerScroll.y - this.options.maxDistance;
+		this.cancelQueuedDownloads();
+		this.unloadLoadedElements();
+		this.loadUnloadedElements();
+
+		console.log("Time: " + (Date.now() - startTime) + " (" + (this.unloadedElements.length + this.loadedElements.length) + " elements)");
 	},
 
-	/**
-	 * Loads images concurrently and in order.
-	 */
-	loadConcurrently: function() {
-		// Cancel any queued downloads
+	cancelQueuedDownloads: function() {
 		for (var i = 0; i < this.timeoutIds.length; i++) {
 			clearTimeout(this.timeoutIds[i]);
 		}
-		this.timeoutIds = [];
 
-		// Unload any loaded elements if necessary
+		this.timeoutIds = [];
+	},
+
+	unloadLoadedElements: function() {
 		for (var i = 0; i < this.loadedElements.length; i++) {
-			if (!this.elementIsVisible(this.loadedElements[i])) {
+			if (!this.elementIsVisible(this.loadedElements[i].retrieve("coordinates"), this.containerCoordinates)) {
 				this.loadedElements[i].setProperty("src", this.loadedElements[i].retrieve("originalSrc"));
 				this.unloadedElements.push(this.loadedElements.splice(i, 1)[0]);
 				i--;
 			}
 		}
+	},
 
-		// Prepare to load unloaded elements
+	loadUnloadedElements: function() {
+		window.Worker ? this.loadUnloadedElementsWithWorkers() : this.loadUnloadedElementsWithoutWorkers();
+	},
+
+	loadUnloadedElementsWithWorkers: function() {
+		this.elementsToLoad = [];
+
+		var worker = new Worker("js/image_loader_web_worker.js");
+
+		worker.onmessage = function(event) {
+			for (var i = 0; i < event.data.length; i++) {
+				this.elementsToLoad.push(this.options.elements[event.data[i]]);
+			}
+
+			this.loadConcurrently();
+		}.bind(this);
+
+		var elementCoordinates = [];
+
+		for (var i = 0; i < this.options.elements.length; i++) {
+			elementCoordinates.push(this.options.elements[i].retrieve("coordinates"));
+		}
+
+		worker.postMessage({
+			containerCoordinates: this.containerCoordinates,
+			elementCoordinates: elementCoordinates
+		});
+	},
+
+	loadUnloadedElementsWithoutWorkers: function() {
 		this.elementsToLoad = [];
 
 		for (var i = 0; i < this.unloadedElements.length; i++) {
-			if (this.elementIsVisible(this.unloadedElements[i])) {
+			if (this.elementIsVisible(this.unloadedElements[i].retrieve("coordinates"), this.containerCoordinates)) {
 				this.elementsToLoad.push(this.unloadedElements[i]);
 			}
 		}
 
-		// Start downloads
+		this.loadConcurrently();
+	},
+
+	loadConcurrently: function() {
 		for (var i = this.concurrentDownloads; i < this.options.maxConcurrentDownloads; i++) {
 			this.loadNextImage();
 		}
@@ -176,13 +220,11 @@ var ImageLoader = new Class({
 		this.timeoutIds.push(timeoutId);
 	},
 
-	elementIsVisible: function(imageElement) {
-		var imageElementCoordinates = imageElement.retrieve("coordinates");
-
-		return imageElementCoordinates.bottom >= this.containerTop
-			&& imageElementCoordinates.top <= this.containerBottom
-			&& imageElementCoordinates.right >= this.containerLeft
-			&& imageElementCoordinates.left <= this.containerRight;
+	elementIsVisible: function(imageElementCoordinates, containerCoordinates) {
+		return imageElementCoordinates.bottom >= containerCoordinates.top
+			&& imageElementCoordinates.top <= containerCoordinates.bottom
+			&& imageElementCoordinates.right >= containerCoordinates.left
+			&& imageElementCoordinates.left <= containerCoordinates.right;
 	}
 });
 
@@ -196,16 +238,16 @@ window.addEvent("domready", function() {
 	});
 
 	imageLoader.addEvent("complete", function() {
-		console.log("Loading images completed.");
+		// console.log("Loading images completed.");
 	});
 
 	imageLoader.addEvent("error", function(element) {
-		console.log("Image failed to load: " + element.getProperty(this.options.dataAttribute));
+		// console.log("Image failed to load: " + element.getProperty(this.options.dataAttribute));
 		element.getParent().destroy();
 	});
 
 	imageLoader.addEvent("load", function(element) {
-		console.log("Image loaded: " + element.getProperty(this.options.dataAttribute));
+		// console.log("Image loaded: " + element.getProperty(this.options.dataAttribute));
 		element.setProperty("src", element.getProperty(this.options.dataAttribute));
 	});
 
