@@ -99,6 +99,9 @@ var ImageLoader = new Class({
 	},
 
 	fetchElementCoordinates: function() {
+		this.loadedElementsCoordinates = [];
+		this.unloadedElementsCoordinates = [];
+
 		for (var i = 0; i < this.loadedElements.length; i++) {
 			this.loadedElementsCoordinates.push(this.loadedElements[i].getCoordinates());
 		}
