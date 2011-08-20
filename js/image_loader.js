@@ -43,10 +43,13 @@ var ImageLoader = new Class({
 		// Timeout IDs of delayed functions (queued downloads)
 		this.timeoutIds = [];
 
-		this.unloadedElements = this.options.elements.slice();
 		this.loadedElements = [];
-		this.elementsToLoad = [];
+		this.unloadedElements = this.options.elements.slice();
 
+		this.loadedElementsCoordinates = [];
+		this.unloadedElementsCoordinates = [];
+
+		this.elementsToLoad = [];
 		this.containerCoordinates = {};
 	},
 
@@ -60,14 +63,26 @@ var ImageLoader = new Class({
 		this.manageImages();
 
 		window.addEvent("resize", function() {
-			this.fetchContainerCoordinates();
-			this.fetchElementCoordinates();
-			this.manageImages();
+			if (this.resizeTimeoutId) {
+				clearTimeout(this.resizeTimeoutId);
+			}
+
+			this.resizeTimeoutId = function() {
+				this.fetchContainerCoordinates();
+				this.fetchElementCoordinates();
+				this.manageImages();
+			}.bind(this).delay(50);
 		}.bind(this));
 
 		window.addEvent("scroll", function() {
-			this.fetchContainerCoordinates();
-			this.manageImages();
+			if (this.scrollTimeoutId) {
+				clearTimeout(this.scrollTimeoutId);
+			}
+
+			this.scrollTimeoutId = function() {
+				this.fetchContainerCoordinates();
+				this.manageImages();
+			}.bind(this).delay(50);
 		}.bind(this));
 	},
 
@@ -84,8 +99,12 @@ var ImageLoader = new Class({
 	},
 
 	fetchElementCoordinates: function() {
-		for (var i = 0; i < this.options.elements.length; i++) {
-			this.options.elements[i].store("coordinates", this.options.elements[i].getCoordinates());
+		for (var i = 0; i < this.loadedElements.length; i++) {
+			this.loadedElementsCoordinates.push(this.loadedElements[i].getCoordinates());
+		}
+
+		for (var i = 0; i < this.unloadedElements.length; i++) {
+			this.unloadedElementsCoordinates.push(this.unloadedElements[i].getCoordinates());
 		}
 	},
 
@@ -96,13 +115,10 @@ var ImageLoader = new Class({
 	},
 
 	manageImages: function() {
-		var startTime = Date.now();
-
 		this.cancelQueuedDownloads();
 		this.unloadLoadedElements();
 		this.loadUnloadedElements();
-
-		console.log("Time: " + (Date.now() - startTime) + " (" + (this.unloadedElements.length + this.loadedElements.length) + " elements)");
+		this.loadConcurrently();
 	},
 
 	cancelQueuedDownloads: function() {
@@ -115,53 +131,23 @@ var ImageLoader = new Class({
 
 	unloadLoadedElements: function() {
 		for (var i = 0; i < this.loadedElements.length; i++) {
-			if (!this.elementIsVisible(this.loadedElements[i].retrieve("coordinates"), this.containerCoordinates)) {
+			if (!this.elementIsVisible(this.loadedElementsCoordinates[i], this.containerCoordinates)) {
 				this.loadedElements[i].setProperty("src", this.loadedElements[i].retrieve("originalSrc"));
 				this.unloadedElements.push(this.loadedElements.splice(i, 1)[0]);
+				this.unloadedElementsCoordinates.push(this.loadedElementsCoordinates.splice(i, 1)[0]);
 				i--;
 			}
 		}
 	},
 
 	loadUnloadedElements: function() {
-		window.Worker ? this.loadUnloadedElementsWithWorkers() : this.loadUnloadedElementsWithoutWorkers();
-	},
-
-	loadUnloadedElementsWithWorkers: function() {
-		this.elementsToLoad = [];
-
-		var worker = new Worker("js/image_loader_web_worker.js");
-
-		worker.onmessage = function(event) {
-			for (var i = 0; i < event.data.length; i++) {
-				this.elementsToLoad.push(this.options.elements[event.data[i]]);
-			}
-
-			this.loadConcurrently();
-		}.bind(this);
-
-		var elementCoordinates = [];
-
-		for (var i = 0; i < this.options.elements.length; i++) {
-			elementCoordinates.push(this.options.elements[i].retrieve("coordinates"));
-		}
-
-		worker.postMessage({
-			containerCoordinates: this.containerCoordinates,
-			elementCoordinates: elementCoordinates
-		});
-	},
-
-	loadUnloadedElementsWithoutWorkers: function() {
 		this.elementsToLoad = [];
 
 		for (var i = 0; i < this.unloadedElements.length; i++) {
-			if (this.elementIsVisible(this.unloadedElements[i].retrieve("coordinates"), this.containerCoordinates)) {
+			if (this.elementIsVisible(this.unloadedElementsCoordinates[i], this.containerCoordinates)) {
 				this.elementsToLoad.push(this.unloadedElements[i]);
 			}
 		}
-
-		this.loadConcurrently();
 	},
 
 	loadConcurrently: function() {
@@ -196,8 +182,10 @@ var ImageLoader = new Class({
 		image.addEvent("load", this.imageEventHandler.bind(this, "load", imageElement));
 
 		this.concurrentDownloads++;
-		this.unloadedElements.splice(this.unloadedElements.indexOf(imageElement), 1);
-		this.loadedElements.push(imageElement);
+
+		var index = this.unloadedElements.indexOf(imageElement);
+		this.loadedElements.push(this.unloadedElements.splice(index, 1)[0]);
+		this.loadedElementsCoordinates.push(this.unloadedElementsCoordinates.splice(index, 1)[0]);
 
 		// Start loading the image
 		image.src = imageElement.getProperty(this.options.dataAttribute);
@@ -238,16 +226,16 @@ window.addEvent("domready", function() {
 	});
 
 	imageLoader.addEvent("complete", function() {
-		// console.log("Loading images completed.");
+		console.log("Loading images completed.");
 	});
 
 	imageLoader.addEvent("error", function(element) {
-		// console.log("Image failed to load: " + element.getProperty(this.options.dataAttribute));
+		console.log("Image failed to load: " + element.getProperty(this.options.dataAttribute));
 		element.getParent().destroy();
 	});
 
 	imageLoader.addEvent("load", function(element) {
-		// console.log("Image loaded: " + element.getProperty(this.options.dataAttribute));
+		console.log("Image loaded: " + element.getProperty(this.options.dataAttribute));
 		element.setProperty("src", element.getProperty(this.options.dataAttribute));
 	});
 
