@@ -20,11 +20,25 @@ var ImageLoader = new Class({
 
 		// Maximum distance that images can be away from the visible part of the
 		// container and still be loaded
-		maxDistance: 250,
+		maxDistance: 500,
 
 		// CSS class that is used to hide empty image elements from people with
 		// JavaScript disabled
-		noJsClass: "no-js"
+		noJsClass: "no-js",
+
+		onComplete: function() {
+			console.log("Loading images completed.");
+		},
+
+		onError: function(element) {
+			console.log("Image failed to load: " + element.getProperty(this.options.dataAttribute));
+			element.getParent().destroy();
+		},
+
+		onLoad: function(element) {
+			console.log("Image loaded: " + element.getProperty(this.options.dataAttribute));
+			element.setProperty("src", element.getProperty(this.options.dataAttribute));
+		}
 	},
 
 	initialize: function(options) {
@@ -84,6 +98,18 @@ var ImageLoader = new Class({
 				this.manageImages();
 			}.bind(this).delay(50);
 		}.bind(this));
+	},
+
+	/**
+	 * Gives image loader control over provided image elements.
+	 */
+	manageElements: function(elements) {
+		this.options.elements = this.options.elements.concat(elements);
+		this.unloadedElements = this.unloadedElements.concat(elements);
+
+		this.fetchElementCoordinates();
+		this.fetchOriginalSrc();
+		this.manageImages();
 	},
 
 	fetchContainerCoordinates: function() {
@@ -217,30 +243,4 @@ var ImageLoader = new Class({
 			&& imageElementCoordinates.right >= containerCoordinates.left
 			&& imageElementCoordinates.left <= containerCoordinates.right;
 	}
-});
-
-// Example usage
-window.addEvent("domready", function() {
-	// Instantiate image loader. See ImageLoader.options for available options.
-	var imageLoader = new ImageLoader({
-		elements: $$(".image"),
-		maxConcurrentDownloads: 2,
-		maxDistance: 400
-	});
-
-	imageLoader.addEvent("complete", function() {
-		console.log("Loading images completed.");
-	});
-
-	imageLoader.addEvent("error", function(element) {
-		console.log("Image failed to load: " + element.getProperty(this.options.dataAttribute));
-		element.getParent().destroy();
-	});
-
-	imageLoader.addEvent("load", function(element) {
-		console.log("Image loaded: " + element.getProperty(this.options.dataAttribute));
-		element.setProperty("src", element.getProperty(this.options.dataAttribute));
-	});
-
-	imageLoader.run();
 });
