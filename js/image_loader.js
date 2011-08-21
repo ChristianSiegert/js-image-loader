@@ -51,6 +51,9 @@ var ImageLoader = new Class({
 		// Number of loaded images
 		this.loadedImagesCount = 0;
 
+		// Flag for whether all images were loaded
+		this.completed = false;
+
 		// Number of running downloads
 		this.concurrentDownloads = 0;
 
@@ -104,6 +107,8 @@ var ImageLoader = new Class({
 	 * Gives image loader control over provided image elements.
 	 */
 	manageElements: function(elements) {
+		this.completed = false;
+
 		this.options.elements = this.options.elements.concat(elements);
 		this.unloadedElements = this.unloadedElements.concat(elements);
 
@@ -226,8 +231,16 @@ var ImageLoader = new Class({
 		// Relay the image event
 		this.fireEvent(eventName, imageElement);
 
+		// Mark image as loaded
+		if (!imageElement.retrieve("loaded")) {
+			imageElement.store("loaded", true);
+			this.loadedImagesCount++;
+		}
+
 		// If this was the last image to load, fire the "complete" event
-		if (++this.loadedImagesCount === this.options.elements.length) {
+		if (this.loadedImagesCount === this.options.elements.length
+				&& !this.completed) {
+			this.completed = true;
 			this.fireEvent("complete");
 			return;
 		}
