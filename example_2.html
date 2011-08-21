@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html>
+	<!-- To understand what is going on here, check out Example 1 -->
+	<head>
+		<meta charset="UTF-8" />
+		<title>Example 2 - Dynamically added content</title>
+		<link rel="stylesheet" href="css/general.css">
+
+		<style>
+			.image-list {
+				line-height: 0;
+			}
+
+				.image {
+					margin: 0 4px 5px 0;
+				}
+		</style>
+	</head>
+
+	<body class="no-js">
+		<ul id="image-list" class="image-list"></ul>
+
+		<noscript>
+			<ul class="image-list">
+				<li class="image-list-item"><img alt="Lorem ipsum" class="image" height="220" src="images/a.jpg" width="330"></li>
+				<li class="image-list-item"><img alt="Lorem ipsum" class="image" height="220" src="images/b.jpg" width="293"></li>
+				<li class="image-list-item"><img alt="Lorem ipsum" class="image" height="220" src="images/c.jpg" width="330"></li>
+				<li class="image-list-item"><img alt="Lorem ipsum" class="image" height="220" src="images/d.jpg" width="293"></li>
+				<li class="image-list-item"><img alt="Lorem ipsum" class="image" height="220" src="images/e.jpg" width="330"></li>
+				<li class="image-list-item"><img alt="Lorem ipsum" class="image" height="220" src="images/f.jpg" width="257"></li>
+				<li class="image-list-item"><img alt="Lorem ipsum" class="image" height="220" src="images/g.jpg" width="330"></li>
+				<li class="image-list-item"><img alt="Lorem ipsum" class="image" height="220" src="images/h.jpg" width="294"></li>
+				<li class="image-list-item"><img alt="Lorem ipsum" class="image" height="220" src="images/i.jpg" width="336"></li>
+				<li class="image-list-item"><img alt="Lorem ipsum" class="image" height="220" src="images/j.jpg" width="330"></li>
+				<li class="image-list-item"><img alt="Lorem ipsum" class="image" height="220" src="images/k.jpg" width="171"></li>
+				<li class="image-list-item"><img alt="Lorem ipsum" class="image" height="220" src="images/l.jpg" width="147"></li>
+				<li class="image-list-item"><img alt="Lorem ipsum" class="image" height="220" src="images/m.jpg" width="146"></li>
+				<li class="image-list-item"><img alt="Lorem ipsum" class="image" height="220" src="images/n.jpg" width="415"></li>
+				<li class="image-list-item"><img alt="Lorem ipsum" class="image" height="220" src="images/o.jpg" width="329"></li>
+				<li class="image-list-item"><img alt="Lorem ipsum" class="image" height="220" src="images/p.jpg" width="147"></li>
+				<li class="image-list-item"><img alt="Lorem ipsum" class="image" height="220" src="images/q.jpg" width="352"></li>
+				<li class="image-list-item"><img alt="Lorem ipsum" class="image" height="220" src="images/r.jpg" width="368"></li>
+				<li class="image-list-item"><img alt="Lorem ipsum" class="image" height="220" src="images/s.jpg" width="352"></li>
+				<li class="image-list-item"><img alt="Lorem ipsum" class="image" height="220" src="images/t.jpg" width="354"></li>
+				<li class="image-list-item"><img alt="Lorem ipsum" class="image" height="220" src="images/u.jpg" width="391"></li>
+				<li class="image-list-item"><img alt="Lorem ipsum" class="image" height="220" src="images/v.jpg" width="147"></li>
+				<li class="image-list-item"><img alt="Lorem ipsum" class="image" height="220" src="images/w.jpg" width="391"></li>
+				<li class="image-list-item"><img alt="Lorem ipsum" class="image" height="220" src="images/x.jpg" width="354"></li>
+				<li class="image-list-item"><img alt="Lorem ipsum" class="image" height="220" src="images/y.jpg" width="331"></li>
+				<li class="image-list-item"><img alt="Lorem ipsum" class="image" height="220" src="images/z.jpg" width="748"></li>
+			</ul>
+		</noscript>
+	</body>
+
+	<script src="js/mootools-core-1.3.2-full-nocompat-yc.js"></script>
+	<script src="js/image_loader.js"></script>
+
+	<script>
+		window.addEvent("domready", function() {
+			// Instantiate image loader. See ImageLoader.options for available options.
+			var imageLoader = new ImageLoader();
+			imageLoader.run();
+
+			var imageData = [
+				{alt: "Lorem ipsum", "class": "image", "data-src": "images/a.jpg", height: 220, src: "images/transparent.gif", width: 330},
+				{alt: "Lorem ipsum", "class": "image", "data-src": "images/b.jpg", height: 220, src: "images/transparent.gif", width: 293},
+				{alt: "Lorem ipsum", "class": "image", "data-src": "images/c.jpg", height: 220, src: "images/transparent.gif", width: 330},
+				{alt: "Lorem ipsum", "class": "image", "data-src": "images/d.jpg", height: 220, src: "images/transparent.gif", width: 293},
+				{alt: "Lorem ipsum", "class": "image", "data-src": "images/e.jpg", height: 220, src: "images/transparent.gif", width: 330},
+				{alt: "Lorem ipsum", "class": "image", "data-src": "images/f.jpg", height: 220, src: "images/transparent.gif", width: 257},
+				{alt: "Lorem ipsum", "class": "image", "data-src": "images/g.jpg", height: 220, src: "images/transparent.gif", width: 330},
+				{alt: "Lorem ipsum", "class": "image", "data-src": "images/h.jpg", height: 220, src: "images/transparent.gif", width: 294},
+				{alt: "Lorem ipsum", "class": "image", "data-src": "images/i.jpg", height: 220, src: "images/transparent.gif", width: 336},
+				{alt: "Lorem ipsum", "class": "image", "data-src": "images/j.jpg", height: 220, src: "images/transparent.gif", width: 330},
+				{alt: "Lorem ipsum", "class": "image", "data-src": "images/k.jpg", height: 220, src: "images/transparent.gif", width: 171},
+				{alt: "Lorem ipsum", "class": "image", "data-src": "images/l.jpg", height: 220, src: "images/transparent.gif", width: 147},
+				{alt: "Lorem ipsum", "class": "image", "data-src": "images/m.jpg", height: 220, src: "images/transparent.gif", width: 146},
+				{alt: "Lorem ipsum", "class": "image", "data-src": "images/n.jpg", height: 220, src: "images/transparent.gif", width: 415},
+				{alt: "Lorem ipsum", "class": "image", "data-src": "images/o.jpg", height: 220, src: "images/transparent.gif", width: 329},
+				{alt: "Lorem ipsum", "class": "image", "data-src": "images/p.jpg", height: 220, src: "images/transparent.gif", width: 147},
+				{alt: "Lorem ipsum", "class": "image", "data-src": "images/q.jpg", height: 220, src: "images/transparent.gif", width: 352},
+				{alt: "Lorem ipsum", "class": "image", "data-src": "images/r.jpg", height: 220, src: "images/transparent.gif", width: 368},
+				{alt: "Lorem ipsum", "class": "image", "data-src": "images/s.jpg", height: 220, src: "images/transparent.gif", width: 352},
+				{alt: "Lorem ipsum", "class": "image", "data-src": "images/t.jpg", height: 220, src: "images/transparent.gif", width: 354},
+				{alt: "Lorem ipsum", "class": "image", "data-src": "images/u.jpg", height: 220, src: "images/transparent.gif", width: 391},
+				{alt: "Lorem ipsum", "class": "image", "data-src": "images/v.jpg", height: 220, src: "images/transparent.gif", width: 147},
+				{alt: "Lorem ipsum", "class": "image", "data-src": "images/w.jpg", height: 220, src: "images/transparent.gif", width: 391},
+				{alt: "Lorem ipsum", "class": "image", "data-src": "images/x.jpg", height: 220, src: "images/transparent.gif", width: 354},
+				{alt: "Lorem ipsum", "class": "image", "data-src": "images/y.jpg", height: 220, src: "images/transparent.gif", width: 331},
+				{alt: "Lorem ipsum", "class": "image", "data-src": "images/z.jpg", height: 220, src: "images/transparent.gif", width: 748}
+			];
+
+			// Create <li> and <img> elements
+			for (var i = 0, listItems = [], imageElements = []; i < imageData.length; i++) {
+				var listItem = new Element("li", {"class": "image-list-item"});
+				listItems.push(listItem);
+
+				var imageElement = new Element("img", imageData[i]);
+				imageElements.push(imageElement);
+				listItem.grab(imageElement);
+			}
+
+			// Add list items to list
+			$("image-list").adopt(listItems);
+
+			// Tell image loader to manage image elements
+			imageLoader.manageElements(imageElements);
+		});
+	</script>
+</html>
