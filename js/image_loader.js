@@ -1,4 +1,3 @@
-// ImageLoader class. Scroll to bottom for example usage.
 var ImageLoader = new Class({
 	Implements: [Events, Options],
 
@@ -207,15 +206,13 @@ var ImageLoader = new Class({
 	 * Fires a class-wide "load" event if the image loaded, otherwise an "error"
 	 * event. Also fires a class-wide "complete" event if it was the last image
 	 * to load.
-	 * @param integer index Position in the array "this.options.elements"
 	 */
 	loadImage: function(imageElement) {
-		var image = new Image();
+		this.concurrentDownloads++;
 
+		var image = new Image();
 		image.addEvent("error", this.imageEventHandler.bind(this, "error", imageElement));
 		image.addEvent("load", this.imageEventHandler.bind(this, "load", imageElement));
-
-		this.concurrentDownloads++;
 
 		var index = this.unloadedElements.indexOf(imageElement);
 		this.loadedElements.push(this.unloadedElements.splice(index, 1)[0]);
