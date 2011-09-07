@@ -82,9 +82,9 @@ var ImageLoader = new Class({
 	 * Starts the image loader.
 	 */
 	run: function() {
-		this.fetchContainerCoordinates();
-		this.fetchElementCoordinates();
-		this.fetchOriginalSrc();
+		this.cacheContainerCoordinates();
+		this.cacheElementCoordinates();
+		this.cacheOriginalSrc();
 		this.manageImages();
 
 		var delay = Browser.Platform.mac || Browser.Platform.ios ? 0 : 5;
@@ -95,8 +95,8 @@ var ImageLoader = new Class({
 			}
 
 			this.resizeTimeoutId = function() {
-				this.fetchContainerCoordinates();
-				this.fetchElementCoordinates();
+				this.cacheContainerCoordinates();
+				this.cacheElementCoordinates();
 				this.manageImages();
 			}.bind(this).delay(delay);
 		}.bind(this));
@@ -107,7 +107,7 @@ var ImageLoader = new Class({
 			}
 
 			this.scrollTimeoutId = function() {
-				this.fetchContainerCoordinates();
+				this.cacheContainerCoordinates();
 				this.manageImages();
 			}.bind(this).delay(delay);
 		}.bind(this));
@@ -122,12 +122,12 @@ var ImageLoader = new Class({
 		this.options.elements = this.options.elements.concat(elements);
 		this.unloadedElements = this.unloadedElements.concat(elements);
 
-		this.fetchElementCoordinates();
-		this.fetchOriginalSrc();
+		this.cacheElementCoordinates();
+		this.cacheOriginalSrc();
 		this.manageImages();
 	},
 
-	fetchContainerCoordinates: function() {
+	cacheContainerCoordinates: function() {
 		var containerScroll = this.options.container.getScroll();
 		var containerSize = this.options.container.getSize();
 
@@ -139,7 +139,7 @@ var ImageLoader = new Class({
 		}
 	},
 
-	fetchElementCoordinates: function() {
+	cacheElementCoordinates: function() {
 		this.loadedElementsCoordinates = [];
 		this.unloadedElementsCoordinates = [];
 
@@ -152,7 +152,7 @@ var ImageLoader = new Class({
 		}
 	},
 
-	fetchOriginalSrc: function() {
+	cacheOriginalSrc: function() {
 		for (var i = 0; i < this.options.elements.length; i++) {
 			this.options.elements[i].store("originalSrc", this.options.elements[i].getProperty("src"));
 		}
