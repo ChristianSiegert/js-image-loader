@@ -67,6 +67,15 @@ var ImageLoader = new Class({
 
 		this.elementsToLoad = [];
 		this.containerCoordinates = {};
+
+		// Distance zone 1: "Visible area"
+		this.DISTANCE_ZONE_1 = 1;
+
+		// Distance zone 2: "Outside of visible area but within maxDistance"
+		this.DISTANCE_ZONE_2 = 2;
+
+		// Distance zone 3: "Outside of visible area and outside of maxDistance"
+		this.DISTANCE_ZONE_3 = 3;
 	},
 
 	/**
@@ -123,10 +132,10 @@ var ImageLoader = new Class({
 		var containerSize = this.options.container.getSize();
 
 		this.containerCoordinates = {
-			bottom: containerScroll.y + containerSize.y + this.options.maxDistance,
-			left: containerScroll.x - this.options.maxDistance,
-			right: containerScroll.x + containerSize.x + this.options.maxDistance,
-			top: containerScroll.y - this.options.maxDistance
+			bottom: containerScroll.y + containerSize.y,
+			left: containerScroll.x,
+			right: containerScroll.x + containerSize.x,
+			top: containerScroll.y
 		}
 	},
 
@@ -166,7 +175,7 @@ var ImageLoader = new Class({
 
 	unloadLoadedElements: function() {
 		for (var i = 0; i < this.loadedElements.length; i++) {
-			if (!this.elementIsVisible(this.loadedElementsCoordinates[i], this.containerCoordinates)) {
+			if (this.getElementDistanceZone(this.loadedElementsCoordinates[i], this.containerCoordinates) === this.DISTANCE_ZONE_3) {
 				this.loadedElements[i].setProperty("src", this.loadedElements[i].retrieve("originalSrc"));
 				this.unloadedElements.push(this.loadedElements.splice(i, 1)[0]);
 				this.unloadedElementsCoordinates.push(this.loadedElementsCoordinates.splice(i, 1)[0]);
@@ -176,13 +185,19 @@ var ImageLoader = new Class({
 	},
 
 	loadUnloadedElements: function() {
-		this.elementsToLoad = [];
+		var highPriorityElements = [];
+		var lowPriorityElements = [];
 
 		for (var i = 0; i < this.unloadedElements.length; i++) {
-			if (this.elementIsVisible(this.unloadedElementsCoordinates[i], this.containerCoordinates)) {
-				this.elementsToLoad.push(this.unloadedElements[i]);
+			var elementDistanceZone = this.getElementDistanceZone(this.unloadedElementsCoordinates[i], this.containerCoordinates);
+
+			switch (elementDistanceZone) {
+				case this.DISTANCE_ZONE_1: highPriorityElements.push(this.unloadedElements[i]); break;
+				case this.DISTANCE_ZONE_2: lowPriorityElements.push(this.unloadedElements[i]); break;
 			}
 		}
+
+		this.elementsToLoad = highPriorityElements.concat(lowPriorityElements);
 	},
 
 	loadConcurrently: function() {
@@ -249,10 +264,24 @@ var ImageLoader = new Class({
 		this.timeoutIds.push(timeoutId);
 	},
 
-	elementIsVisible: function(imageElementCoordinates, containerCoordinates) {
-		return imageElementCoordinates.bottom >= containerCoordinates.top
-			&& imageElementCoordinates.top <= containerCoordinates.bottom
-			&& imageElementCoordinates.right >= containerCoordinates.left
-			&& imageElementCoordinates.left <= containerCoordinates.right;
+	getElementDistanceZone: function(imageElementCoordinates, containerCoordinates) {
+		// If element is in visible area
+		if (imageElementCoordinates.bottom >= containerCoordinates.top
+				&& imageElementCoordinates.top <= containerCoordinates.bottom
+				&& imageElementCoordinates.right >= containerCoordinates.left
+				&& imageElementCoordinates.left <= containerCoordinates.right) {
+			return this.DISTANCE_ZONE_1;
+		}
+
+		// If element is outside of visible area but within maxDistance
+		if (imageElementCoordinates.bottom >= containerCoordinates.top - this.options.maxDistance
+				&& imageElementCoordinates.top <= containerCoordinates.bottom + this.options.maxDistance
+				&& imageElementCoordinates.right >= containerCoordinates.left - this.options.maxDistance
+				&& imageElementCoordinates.left <= containerCoordinates.right + this.options.maxDistance) {
+			return this.DISTANCE_ZONE_2
+		}
+
+		// If element is outside of visible area and outside of maxDistance
+		return this.DISTANCE_ZONE_3;
 	}
 });
