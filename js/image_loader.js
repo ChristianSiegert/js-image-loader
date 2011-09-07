@@ -18,8 +18,8 @@ var ImageLoader = new Class({
 		maxConcurrentDownloads: 4,
 
 		// Maximum distance that images can be away from the visible part of the
-		// container and still be loaded
-		maxDistance: 500,
+		// container and still be loaded. Value can be string "auto" or integer.
+		maxDistance: "auto",
 
 		// CSS class that is used to hide empty image elements from people with
 		// JavaScript disabled
@@ -84,6 +84,7 @@ var ImageLoader = new Class({
 	run: function() {
 		this.cacheContainerCoordinates();
 		this.cacheElementCoordinates();
+		this.cacheMaxDistance();
 		this.cacheOriginalSrc();
 		this.manageImages();
 
@@ -97,6 +98,7 @@ var ImageLoader = new Class({
 			this.resizeTimeoutId = function() {
 				this.cacheContainerCoordinates();
 				this.cacheElementCoordinates();
+				this.cacheMaxDistance();
 				this.manageImages();
 			}.bind(this).delay(delay);
 		}.bind(this));
@@ -150,6 +152,17 @@ var ImageLoader = new Class({
 		for (var i = 0; i < this.unloadedElements.length; i++) {
 			this.unloadedElementsCoordinates.push(this.unloadedElements[i].getCoordinates());
 		}
+	},
+
+	cacheMaxDistance: function() {
+		if (this.options.maxDistance === "auto") {
+			this.maxDistanceX = screen.width * 2;
+			this.maxDistanceY = screen.height * 2;
+			return;
+		}
+
+		this.maxDistanceX = this.options.maxDistance;
+		this.maxDistanceY = this.options.maxDistance;
 	},
 
 	cacheOriginalSrc: function() {
@@ -251,7 +264,7 @@ var ImageLoader = new Class({
 			this.loadedImagesCount++;
 		}
 
-		// If this was the last image to load, fire the "complete" event
+		// If this was the last image to load, fire "complete" event
 		if (this.loadedImagesCount === this.options.elements.length
 				&& !this.completed) {
 			this.completed = true;
@@ -274,10 +287,10 @@ var ImageLoader = new Class({
 		}
 
 		// If element is outside of visible area but within maxDistance
-		if (imageElementCoordinates.bottom >= containerCoordinates.top - this.options.maxDistance
-				&& imageElementCoordinates.top <= containerCoordinates.bottom + this.options.maxDistance
-				&& imageElementCoordinates.right >= containerCoordinates.left - this.options.maxDistance
-				&& imageElementCoordinates.left <= containerCoordinates.right + this.options.maxDistance) {
+		if (imageElementCoordinates.bottom >= containerCoordinates.top - this.maxDistanceY
+				&& imageElementCoordinates.top <= containerCoordinates.bottom + this.maxDistanceY
+				&& imageElementCoordinates.right >= containerCoordinates.left - this.maxDistanceX
+				&& imageElementCoordinates.left <= containerCoordinates.right + this.maxDistanceX) {
 			return this.DISTANCE_ZONE_2
 		}
 
