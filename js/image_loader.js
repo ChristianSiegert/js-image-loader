@@ -78,6 +78,8 @@ var ImageLoader = new Class({
 		this.fetchOriginalSrc();
 		this.manageImages();
 
+		var delay = Browser.Platform.mac || Browser.Platform.ios ? 0 : 5;
+
 		window.addEvent("resize", function() {
 			if (this.resizeTimeoutId) {
 				clearTimeout(this.resizeTimeoutId);
@@ -87,7 +89,7 @@ var ImageLoader = new Class({
 				this.fetchContainerCoordinates();
 				this.fetchElementCoordinates();
 				this.manageImages();
-			}.bind(this).delay(50);
+			}.bind(this).delay(delay);
 		}.bind(this));
 
 		window.addEvent("scroll", function() {
@@ -98,7 +100,7 @@ var ImageLoader = new Class({
 			this.scrollTimeoutId = function() {
 				this.fetchContainerCoordinates();
 				this.manageImages();
-			}.bind(this).delay(50);
+			}.bind(this).delay(delay);
 		}.bind(this));
 	},
 
